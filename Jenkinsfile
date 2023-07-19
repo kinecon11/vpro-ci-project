@@ -17,6 +17,8 @@ pipeline {
         NEXUSPORT = '8081'
         NEXUS_GRP_REPO = 'vprofile-maven-group'
         NAXUS_LOGIN = 'nexuslogin'
+        SONARSERVER = 'sonarserver'
+        SONARSCANNER = 'sonarscanner'
 
     }
 	
@@ -29,14 +31,14 @@ pipeline {
             post {
                 success {
                     echo 'Now Archiving...'
-                    archiveArtifacts artifacts: '**/target/*.war'
+                    archiveArtifacts artifacts: '**/*.war'
                 }
             }
         }
 
-	stage('UNIT TEST'){
+	stage('TEST'){
             steps {
-                sh 'mvn test'
+                sh 'mvn -s settings.xml test'
             }
         }
 
@@ -48,7 +50,7 @@ pipeline {
 		
         stage ('CODE ANALYSIS WITH CHECKSTYLE'){
             steps {
-                sh 'mvn checkstyle:checkstyle'
+                sh 'mvn -s settings.xml checkstyle:checkstyle'
             }
             post {
                 success {
@@ -60,11 +62,11 @@ pipeline {
         stage('CODE ANALYSIS with SONARQUBE') {
           
 		  environment {
-             scannerHome = tool 'sonarscanner4'
+             scannerHome = tool "${SONARSCANNER}"
           }
 
           steps {
-            withSonarQubeEnv('sonar-pro') {
+            withSonarQubeEnv("${SONARSERVER}") {
                sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=vprofile \
                    -Dsonar.projectName=vprofile-repo \
                    -Dsonar.projectVersion=1.0 \
